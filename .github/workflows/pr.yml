@@ -38,3 +38,16 @@ jobs:
       run: pio pkg install
     - name: Run PlatformIO
       run: platformio run -e d1_mini -e d1_mini_pro
+    - name: Collect firmware binaries
+      if: github.event_name == 'push'
+      run: |
+        mkdir -p ../firmware
+        cp .pio/build/d1_mini/firmware.bin     ../firmware/firmware-d1_mini.bin
+        cp .pio/build/d1_mini_pro/firmware.bin ../firmware/firmware-d1_mini_pro.bin
+    - name: Upload firmware artifacts
+      if: github.event_name == 'push'
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware-${{ github.sha }}
+        path: firmware/
+        retention-days: 30
