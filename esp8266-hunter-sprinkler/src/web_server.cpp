@@ -47,6 +47,8 @@ void setup_APIRoutes() {
             [](AsyncWebServerRequest *request) { request->redirect("/home"); });
   server.on("/home", HTTP_GET,
             [](AsyncWebServerRequest *request) { handleHomePage(request); });
+  server.on("/settings", HTTP_GET, handleMqttSettingsPage);
+  server.on("/settings", HTTP_POST, saveMqttSettingsRequest);
   server.on("/update", HTTP_GET,
             [](AsyncWebServerRequest *request) { handleUpdate(request); });
   server.on("/zone", HTTP_GET,

@@ -35,7 +35,7 @@ MQTT setup_wifi() {
   wifiManager.addParameter(&custom_mqtt_port);
   wifiManager.addParameter(&custom_mqtt_username);
   wifiManager.addParameter(&custom_mqtt_password);
-  // wifiManager.resetSettings();
+  //wifiManager.resetSettings();
   wifiManager.autoConnect(SSID_AP, PWD_AP);
   MqttSettings.server = custom_mqtt_server.getValue();
   String port_number = custom_mqtt_port.getValue();

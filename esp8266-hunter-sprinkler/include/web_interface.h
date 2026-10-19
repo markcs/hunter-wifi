@@ -15,5 +15,6 @@ struct WebInterface
 void handleHomePage(AsyncWebServerRequest *request);
 void handleRunZone(AsyncWebServerRequest *request);
 void handleRunProgram(AsyncWebServerRequest *request);
+void handleMqttSettingsPage(AsyncWebServerRequest *request);
 
 #endif

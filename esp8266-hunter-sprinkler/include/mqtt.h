@@ -27,6 +27,8 @@ extern String TopicResult;
 extern String TopicZone;
 extern String TopicProgram;
 
+extern MQTT MqttSettings;
+bool updateMqttSettings(const MQTT &settings);
 void mqtt_connect(const char *MQTT_USER, const char *MQTT_PASSWORD);
 void mqttPublishResult(const char *toSend);
 void mqtt_subscribe_topics ();

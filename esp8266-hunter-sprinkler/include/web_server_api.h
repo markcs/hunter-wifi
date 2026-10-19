@@ -6,6 +6,7 @@
 void startZoneRequest(AsyncWebServerRequest *request);
 void startProgramRequest(AsyncWebServerRequest *request);
 void stopZoneRequest(AsyncWebServerRequest *request);
+void saveMqttSettingsRequest(AsyncWebServerRequest *request);
 int getIdFromURL(AsyncWebServerRequest *request, String root);
 
 #endif

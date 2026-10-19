@@ -15,6 +15,39 @@ bool enableMQTT = true;
 MQTT MqttSettings;
 MQTT from_wifi_manager;
 
+bool updateMqttSettings(const MQTT &settings) {
+  DynamicJsonDocument doc(1024);
+  doc["mqtt_server"] = settings.server;
+  doc["mqtt_port"] = settings.port;
+  doc["mqtt_username"] = settings.username;
+  doc["mqtt_password"] = settings.password;
+  doc["mqtt_enable"] = settings.enable;
+
+  File configFile = LittleFS.open("/config.json", "w");
+  if (!configFile) {
+    Serial.println("failed to open config file for writing");
+    return false;
+  }
+
+  size_t bytesWritten = serializeJsonPretty(doc, configFile);
+  configFile.close();
+  if (bytesWritten == 0) {
+    Serial.println("failed to write MQTT config");
+    return false;
+  }
+
+  MqttSettings = settings;
+  client.disconnect();
+  if (MqttSettings.enable) {
+    client.setServer(MqttSettings.server.c_str(), MqttSettings.port);
+    client.setCallback(mqtt_callback);
+  }
+  Serial.printf("MQTT settings saved: %s:%d (enabled: %s)\n",
+                MqttSettings.server.c_str(), MqttSettings.port,
+                MqttSettings.enable ? "yes" : "no");
+  return true;
+}
+
 void setup() {
   Serial.begin(SERIAL_SPEED);
   // WiFi.mode(WIFI_STA);
@@ -54,23 +87,14 @@ void setup() {
   if (from_wifi_manager.server != "") {
     MqttSettings = from_wifi_manager;
   }
+  if (MqttSettings.port < 1 || MqttSettings.port > 65535) {
+    MqttSettings.port = 1883;
+  }
   setup_WebServer();
   if (shouldSaveConfig) {
     Serial.println("saving config");
-    DynamicJsonDocument doc(1024);
-    doc["mqtt_server"] = MqttSettings.server;
-    doc["mqtt_port"] = MqttSettings.port;
-    doc["mqtt_username"] = MqttSettings.username;
-    doc["mqtt_password"] = MqttSettings.password;
-    doc["mqtt_enable"] = MqttSettings.enable;
-    File configFile = LittleFS.open("/config.json", "w");
-    if (!configFile) {
-      Serial.println("failed to open config file for writing");
-    }
-    serializeJson(doc, Serial);
-    serializeJsonPretty(doc, configFile);
-    configFile.close();
-    // end save
+    MqttSettings.enable = true;
+    updateMqttSettings(MqttSettings);
   }
   if (MqttSettings.enable) {
     client.setServer(MqttSettings.server.c_str(), MqttSettings.port);
@@ -83,22 +107,19 @@ void setup() {
 }
 
 void loop() {
-  if (MqttSettings.enable) {
+  static bool mqttAttempted = false;
+  static unsigned long lastMqttAttempt = 0;
+  const unsigned long mqttRetryInterval = 5000;
+
+  if (MqttSettings.enable && !client.connected() &&
+      (!mqttAttempted || millis() - lastMqttAttempt >= mqttRetryInterval)) {
+    mqttAttempted = true;
+    lastMqttAttempt = millis();
+    mqtt_connect(MqttSettings.username.c_str(),
+                 MqttSettings.password.c_str());
     if (!client.connected()) {
-      int retries = 0;
-      while (!client.connected()) {
-        if (retries < 50) {
-          mqtt_connect(MqttSettings.username.c_str(),
-                       MqttSettings.password.c_str());
-        } else {
-          retries++;
-          // Wait 5 seconds before retrying
-          delay(5000);
-        }
-        if (retries >= 50) {
-          ESP.restart();
-        }
-      }
+      Serial.printf("MQTT connection failed (state %d); retrying in 5 seconds\n",
+                    client.state());
     }
   }
   // wifiDisconnected = checkWifiConnection(wifiDisconnected);

@@ -42,7 +42,7 @@ void sendResult(String toSend, String webhook) {
  * @param webhook url where the result will be sent
  */
 void startZone(byte num, byte time, String webhook) {
-
+  Serial.println("startZone reached");
   byte result = smartPort.startZone(num, time);
 
   String toSend = "{";
