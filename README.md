@@ -37,7 +37,7 @@ Feel free to fork this project and improve it. Some things that would be good to
  - [x] Use of MQTT protocol.
  - [ ] API authentication.
  - [x] mDNS (easier to discover your device by using a `.local` domain).
- - [ ] Webpage (it only has an API).
+ - [x] Webpage — a `/settings` page lets you configure MQTT broker settings (address, port, credentials, enable/disable) directly from your browser without reflashing.
  - [x] OTA support
 
 ## License

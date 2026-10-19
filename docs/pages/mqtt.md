@@ -1,19 +1,90 @@
 # MQTT API Reference
 
-Hint: work in progress
+## Configuring MQTT
 
-## Endpoint to check in
+MQTT broker settings can be configured two ways:
 
-hunter/device_hostname/checkIn --> will publish online/rebooted/reconnected/Dead Somewhere
+### 1. At first boot (WiFi setup portal)
 
-## Endpoint to check the result
+When the device boots for the first time and creates the `WateringSystemAP` access point, the captive portal includes fields for:
 
-hunter/device_hostname/result --> will publish the same result json as the [rest api](/hunter-wifi/pages/api.md)
+- **MQTT Broker address**
+- **MQTT Port**
+- **MQTT Username**
+- **MQTT Password**
 
-## Endpoint to start and stop a zone
+Fill these in before saving your WiFi credentials.
 
-hunter/device_hostname/zone/XXX --> commands the zone with json payload to be published by the user ( {"action": "start","time": "1"} -- {"action": "stop"} )
+### 2. Via the web settings page
 
-## Endpoint to start a program
+Once the device is on your network, navigate to:
 
-hunter/device_hostname/program/XXX --> commands the zone with json payload to be published by the user ( {"action": "start"} )
+```
+GET /settings
+```
+
+This serves an HTML form pre-populated with the current broker address, port, and username. Submit the form to update settings without rebooting.
+
+```
+POST /settings
+```
+
+Accepts the following form fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `mqtt_server` | string | Broker hostname or IP (max 253 chars, required) |
+| `mqtt_port` | number | Broker port 1–65535 (required) |
+| `mqtt_username` | string | Username (max 99 chars, optional) |
+| `mqtt_password` | string | New password (max 99 chars) — leave blank to keep existing |
+| `clear_password` | checkbox | If checked, clears the saved password |
+| `mqtt_enabled` | checkbox | If checked, enables the MQTT connection |
+
+Returns `202 Accepted` when the update has been queued (applied within a few seconds). Reload `/settings` to verify.
+
+> **Note:** Credentials are submitted over plain HTTP. Only use this page on a trusted local network.
+
+---
+
+## MQTT Topics
+
+### Check-in status
+
+```
+hunter/<device_hostname>/checkIn
+```
+
+Publishes: `online` / `rebooted` / `reconnected` / `Dead Somewhere`
+
+### Action result
+
+```
+hunter/<device_hostname>/result
+```
+
+Publishes the same result JSON as the [HTTP API](api.md).
+
+### Start / stop a zone
+
+```
+hunter/<device_hostname>/zone/<ZONE_NUMBER>
+```
+
+Payload (JSON):
+
+```json
+{ "action": "start", "time": "1" }
+{ "action": "stop" }
+```
+
+### Start a program
+
+```
+hunter/<device_hostname>/program/<PROGRAM_NUMBER>
+```
+
+Payload (JSON):
+
+```json
+{ "action": "start" }
+```
